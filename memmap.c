@@ -57,6 +57,22 @@ int main (int argc, char *argv[])
   /* 
    * 1. find size of input file 
    */
+  int fstat(int fd, struct stat *buf){
+
+    // allocating buf into empty size
+    off_t *st_size = (off_t*)malloc(sizeof(buf->st_size));
+
+    // dynamically allocating
+    free(st_size);
+
+    // error correction
+    if(fstat(fd, buf) < 0){
+      perror("fstat error");
+      return -1;
+    }
+
+    return 0;
+  }
 
   /* 
    * 2. go to the location corresponding to the last byte 
