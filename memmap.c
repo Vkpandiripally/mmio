@@ -57,47 +57,51 @@ int main (int argc, char *argv[])
   /* 
    * 1. find size of input file 
    */
-  int fstat(int fd, struct stat *buf){
 
-    // allocating buf into empty size
-    off_t *st_size = (off_t*)malloc(sizeof(buf->st_size));
-
-    // dynamically allocating
-    free(st_size);
-
-    // error correction
-    if(fstat(fd, buf) < 0){
-      perror("fstat error");
-      return -1;
-    }
-
-    return 0;
+  if (fstat(fdin, &statbuf) < 0){
+    err_sys("fstat error");
   }
+
+  off_t filesize = statbuf.st_size;
 
   /* 
    * 2. go to the location corresponding to the last byte 
    */
 
+  off_t last_byte = lseek(fdin, filesize - 1, SEEK_SET);
+  if (last_byte == -1){
+    err_sys("last byte not found");
+  }
   /* 
    * 3. write a dummy byte at the last location 
    */
+  
+  char dummy_byte = 'X';
+  ssize_t new_file = write(fdout, &dummy_byte, 1);
+  if (new_file == -1){
+    err_sys("Dummy byte having problems");
+  }
 
   /* 
    * 4. mmap the input file 
    */
+  src = mmap(NULL, statbuf.st_size, (PROT_READ | PROT_WRITE), MAP_SHARED, fdin, 0);
+
 
   /* 
    * 5. mmap the output file 
    */
+  dst = mmap(NULL, statbuf.st_size, (PROT_READ | PROT_WRITE), MAP_SHARED, fdout, 0);
 
   /* 
    * 6. copy the input file to the output file 
    */
+  memccpy(dst, src, statbuf.st_size);
     /* Memory can be dereferenced using the * operator in C.  This line
      * stores what is in the memory location pointed to by src into
      * the memory location pointed to by dest.
      */
-    *dst = *src;
+  *dst = *src;
 } 
 
 
